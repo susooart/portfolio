@@ -3,6 +3,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaItems = [];
     let currentMediaIndex = 0;
 
+    const createHomeButton = () => {
+        if (document.querySelector('.home-floating-btn')) return;
+
+        const homeBtn = document.createElement('a');
+        homeBtn.href = '../../index.html';
+        homeBtn.className = 'home-floating-btn';
+        homeBtn.setAttribute('aria-label', 'Back to main menu');
+        homeBtn.title = 'Main menu';
+        homeBtn.innerHTML = '<i class="fa-solid fa-house"></i>';
+
+        document.body.appendChild(homeBtn);
+    };
+
     const fetchProjects = async () => {
         try {
             const response = await fetch('../../Config/projects.txt');
@@ -456,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const init = async () => {
+        createHomeButton();
         projects = await fetchProjects();
         const prevBtn = document.getElementById('prev-project');
         const nextBtn = document.getElementById('next-project');
@@ -466,5 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchStats();
     };
 
+    init();
+});
     init();
 });

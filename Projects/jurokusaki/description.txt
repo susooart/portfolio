@@ -1,6 +1,6 @@
 Juroku Saki
 ---
-This work is a workflow from the modeling of a scenario and characters with the help of the Blender plugin (MPFB) for human bases, passing through the motion capture for animation with version 5.8 of UE and ending with the post-production of the project with digital composition based on extracting cryptomatte channels from Unreal and finishing up with a render that will be composed and edited in Blender. Finally I created the voices with a microhpne and Audacity.
+This project is a workflow from the modeling of a scenario and characters with the help of the Blender plugin (MPFB) for human bases, passing through the motion capture for animation with version 5.8 of UE and ending with the post-production of the project with digital composition based on extracting cryptomatte channels from Unreal and finishing up with a render that will be composed and edited in Blender. Finally I created the voices with a microhpne and Audacity.
 
 Plugins in Blender: MPFB for human base.
 Music: ⁨@oscar.composer⁩

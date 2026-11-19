@@ -6,4 +6,4 @@ Software Tags - (Blender)
 ---
 https://cdna.artstation.com/p/assets/images/images/049/018/582/large/suso-ojeda-traverseaccesoriesfinal.jpg?1651509079
 ---
-trave.html
+traver.html

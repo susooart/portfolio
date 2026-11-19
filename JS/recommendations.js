@@ -20,12 +20,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         recommendations.forEach((rec, index) => {
             const lines = rec.split('\n').map(line => line.trim()).filter(line => line);
-            const hasAvatar = lines[1].startsWith('http');
-            const name = lines[0];
+            if (lines.length === 0) return;
+
+            const hasAvatar = Boolean(lines[1] && lines[1].startsWith('http'));
+            const name = lines[0] || '';
             const avatar = hasAvatar ? lines[1] : '';
-            const position = hasAvatar ? lines[2] : lines[1];
-            const date = hasAvatar ? lines[3] : lines[2];
-            const quote = hasAvatar ? lines[4] : lines[3];
+            const position = hasAvatar ? (lines[2] || '') : (lines[1] || '');
+            const date = hasAvatar ? (lines[3] || '') : (lines[2] || '');
+            const quote = hasAvatar ? (lines[4] || '') : (lines[3] || '');
 
             const recommendation = document.createElement("div");
             recommendation.className = "recommendation";
@@ -35,12 +37,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="recommendation-header">
                     ${avatar ? `<img src="${avatar}" alt="${name}" class="recommendation-avatar">` : ''}
                     <div class="recommendation-details">
-                        <h2>${name}</h2>
-                        <h3>${position}</h3>
-                        <p class="recommendation-date">${date}</p>
+                        ${name ? `<h2>${name}</h2>` : ''}
+                        ${position ? `<h3>${position}</h3>` : ''}
+                        ${date ? `<p class="recommendation-date">${date}</p>` : ''}
                     </div>
                 </div>
-                <p class="recommendation-quote">"${quote}"</p>
+                ${quote ? `<p class="recommendation-quote">"${quote}"</p>` : ''}
             `;
 
             recommendationFragment.appendChild(recommendation);
@@ -61,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         let isTransitioning = false;
 
         function showRecommendation(index, direction) {
-            if (isTransitioning) return;
+            if (isTransitioning || !recommendationsElements.length) return;
             isTransitioning = true;
 
             const current = recommendationsElements[currentIndex];
@@ -128,10 +130,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 let newIndex;
                 if (diffX > 0) {
                     // Swiped left
-                    newIndex = (currentIndex + 1) % recommendations.length;
+                    newIndex = (currentIndex + 1) % recommendationsElements.length;
                 } else {
                     // Swiped right
-                    newIndex = (currentIndex - 1 + recommendations.length) % recommendations.length;
+                    newIndex = (currentIndex - 1 + recommendationsElements.length) % recommendationsElements.length;
                 }
                 showRecommendation(newIndex);
                 isSwiping = false;

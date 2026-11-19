@@ -55,64 +55,91 @@ function createThumbnail(src, alt, galleryPageUrl, hasMultipleImages, hasVideo, 
     return thumbnailLink;
 }
 
-// Get the thumbnail container element
 const thumbnailContainer = document.getElementById("thumbnail-container");
 
-// Function to fetch and parse the description.txt file
 function fetchProjectData(projectName) {
     const descriptionPath = `Projects/${projectName}/description.txt`;
     const mediaPath = `Projects/${projectName}/media.txt`;
 
     return Promise.all([
-        fetch(descriptionPath).then(response => response.text()),
-        fetch(mediaPath).then(response => response.text())
+        fetch(descriptionPath).then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status} on ${descriptionPath}`);
+            return response.text();
+        }),
+        fetch(mediaPath).then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status} on ${mediaPath}`);
+            return response.text();
+        })
     ])
     .then(([descriptionText, mediaText]) => {
         const [title, description, tags, thumbnailUrl, htmlFileName] = descriptionText.split('---').map(line => line.trim());
-        const galleryPageUrl = descriptionPath.replace('description.txt', htmlFileName);
+        const resolvedHtmlFile = htmlFileName || `${projectName}.html`;
+        const galleryPageUrl = `Projects/${projectName}/${resolvedHtmlFile}`;
 
         const mediaLines = mediaText.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
-        const hasMultipleImages = mediaLines.filter(line => line.match(/\.(jpeg|jpg|gif|png)$/)).length > 1;
-        const hasVideo = mediaLines.some(line => line.match(/\.(mp4)$/));
-        const hasYouTube = mediaLines.some(line => line.includes('youtube.com'));
+        const hasMultipleImages = mediaLines.filter(line => line.split('?')[0].match(/\.(jpeg|jpg|gif|png|webp)$/i)).length > 1;
+        const hasVideo = mediaLines.some(line => line.split('?')[0].match(/\.(mp4|webm)$/i));
+        const hasYouTube = mediaLines.some(line => line.includes('youtube.com') || line.includes('youtu.be'));
         const hasSketchfab = mediaLines.some(line => line.includes('sketchfab.com'));
 
-        // Find the banner image
         const bannerImageLine = mediaLines.find(line => line.endsWith('*'));
-        const bannerImageUrl = bannerImageLine ? bannerImageLine.replace('*', '').trim() : null;
+        const bannerImageUrl = bannerImageLine ? bannerImageLine.slice(0, -1).trim() : null;
 
-        return { src: thumbnailUrl, alt: title, galleryPageUrl, hasMultipleImages, hasVideo, hasYouTube, hasSketchfab, bannerImageUrl };
-    })
-    .catch(error => console.error('Error loading project data:', error));
+        return {
+            src: thumbnailUrl,
+            alt: title || projectName,
+            galleryPageUrl,
+            hasMultipleImages,
+            hasVideo,
+            hasYouTube,
+            hasSketchfab,
+            bannerImageUrl
+        };
+    });
 }
 
-// Function to fetch the projects.txt file
 function fetchProjects() {
     return fetch('Config/projects.txt')
-        .then(response => response.text())
-        .then(text => text.split('\n').map(line => line.trim()).filter(line => line))
-        .catch(error => console.error('Error loading projects:', error));
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status} on Config/projects.txt`);
+            return response.text();
+        })
+        .then(text => text.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#')))
+        .catch(error => {
+            console.error('Error loading projects:', error);
+            return [];
+        });
 }
 
-// Fetch projects and create thumbnails
 fetchProjects().then(projects => {
+    if (!thumbnailContainer || !projects.length) return;
+
     let bannerImageSet = false;
-    const fragment = document.createDocumentFragment(); // Create a document fragment
+    const fragment = document.createDocumentFragment();
 
     const fetchProjectDataPromises = projects.map(projectName => {
         return fetchProjectData(projectName).then(artwork => {
-            const thumbnail = createThumbnail(artwork.src, artwork.alt, artwork.galleryPageUrl, artwork.hasMultipleImages, artwork.hasVideo, artwork.hasYouTube, artwork.hasSketchfab);
-            fragment.appendChild(thumbnail); // Append each thumbnail to the fragment
+            const thumbnail = createThumbnail(
+                artwork.src,
+                artwork.alt,
+                artwork.galleryPageUrl,
+                artwork.hasMultipleImages,
+                artwork.hasVideo,
+                artwork.hasYouTube,
+                artwork.hasSketchfab
+            );
+            fragment.appendChild(thumbnail);
 
-            // Set the banner image if not already set
             if (!bannerImageSet && artwork.bannerImageUrl) {
-                document.querySelector('.top-container').style.backgroundImage = `url(${artwork.bannerImageUrl})`;
-                bannerImageSet = true;
+                const topContainer = document.querySelector('.top-container');
+                if (topContainer) {
+                    topContainer.style.backgroundImage = `url(${artwork.bannerImageUrl})`;
+                    bannerImageSet = true;
+                }
             }
         }).catch(error => console.error(`Error loading data for project: ${projectName}`, error));
     });
 
-    // Once all project data has been fetched and processed, append the fragment to the container
     Promise.all(fetchProjectDataPromises).then(() => {
         thumbnailContainer.appendChild(fragment);
     });

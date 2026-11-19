@@ -1,0 +1,14 @@
+Demo Reel Rig 
+---
+Demo reel showing the creating of some rigs.
+Used models:
+- Human: https://sketchfab.com/3d-models/midpoly-malefemale-models-9f13ae8de488427c9e0e9a4a6c699f79
+- Spider: https://sketchfab.com/3d-models/crystal-spider-5d83a21690fa416f86c570a7377e935d#download
+- Toyota celica: https://sketchfab.com/3d-models/tuning-celica-a974c1192e1742ada163ef773bf67c0f
+- Tiger Shark: https://sketchfab.com/3d-models/tiger-shark-8a19770317984b4a9628934acd587a67
+---
+Software Tags - (Blender, After Effects)
+---
+https://www.youtube.com/watch?v=WH40iUAV0H8
+---
+rig.html

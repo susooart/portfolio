@@ -1,5 +1,5 @@
 /* General Reset */
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -10,7 +10,7 @@ body {
   font-family: 'Poppins', sans-serif;
   background-color: #121212;
   color: #d7d7d7;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -22,14 +22,15 @@ body {
   display: flex;
   width: 100%;
   height: 100%;
+  min-width: 0;
 }
 
 h1 {
   font-size: 20px;
   margin-bottom: 10px;
   color: white;
-  -webkit-user-select: none; /* Standard property */
-  user-select: none; /* Safari and iOS support */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 h2 {
@@ -37,65 +38,67 @@ h2 {
   color: grey;
   font-family: 'Poppins', sans-serif;
   font-weight: 400;
-  -webkit-user-select: none; /* Standard property */
-  user-select: none; /* Safari and iOS support */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 h3 {
   font-size: 16px;
   font-weight: 100;
-  -webkit-user-select: none; /* Standard property */
-  user-select: none; /* Safari and iOS support */
+  -webkit-user-select: none;
+  user-select: none;
   padding-left: 10px;
 }
 
 .media-container {
   position: relative;
-  flex: 0 0 80%; /* Take up 80% of the width */
+  flex: 1 1 auto;
+  min-width: 0;
   background-color: #151515;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   padding: 0;
-  overflow-y: auto; /* Enable vertical scrolling */
-  height: 100vh; /* Full viewport height */
+  overflow-y: auto;
+  height: 100vh;
 }
-
 
 /* Minimal Scrollbar Styling */
 .media-container::-webkit-scrollbar {
-  width: 6px; /* Width of the scrollbar */
-  
+  width: 6px;
 }
 
 .media-container::-webkit-scrollbar-track {
-  background: none; /* Background of the scrollbar track */
+  background: none;
 }
 
 .media-container::-webkit-scrollbar-thumb {
-  background-color: #222222; /* Color of the scrollbar thumb */
-  border-radius: 2px; /* Roundness of the scrollbar thumb */
+  background-color: #222222;
+  border-radius: 2px;
 }
 
 .media-container::-webkit-scrollbar-thumb:hover {
-  background-color: #333333; /* Hover color of the scrollbar thumb */
+  background-color: #333333;
 }
 
 .info-container::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for WebKit browsers */
+  display: none;
 }
 
 /* Info Container Styling */
 .info-container {
-  flex: 0 0 20%; /* Take up 20% of the width */
+  flex: 0 0 24%;
+  min-width: 260px;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   padding: 10px;
   gap: 10px;
-  overflow: hidden;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
 }
 
 /* Top Container Styling */
@@ -103,21 +106,21 @@ h3 {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 /* Project Description Container Styling */
 .project-description-container {
   padding: 10px;
+  min-width: 0;
 }
 
 .project-description-container h1 {
   font-size: 16px;
-  margin: 0;
-  margin-bottom: 5px;
-  color: white;
-  -webkit-user-select: none; /* Standard property */
-  user-select: none; /* Safari and iOS support */
+  margin: 0 0 5px 0;
   color: #d7d7d7;
+  -webkit-user-select: none;
+  user-select: none;
   font-weight: 400;
 }
 
@@ -132,8 +135,9 @@ h3 {
   color: grey;
   font-family: 'Poppins', sans-serif;
   font-weight: 400;
-  -webkit-user-select: none; /* Standard property */
-  user-select: none; /* Safari and iOS support */
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-wrap: break-word;
 }
 
 .media-description {
@@ -152,10 +156,10 @@ h3 {
 
 /* Media Content Styling */
 #project-media {
-  
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 #project-media img {
@@ -179,16 +183,16 @@ hr {
 
 .link-button {
   display: inline-block;
-    color: rgb(20, 20, 20);
-    background-color: #4d779f;
-    padding: 0 10px;
-    border-radius: 2px;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    margin-top: 10px;
-    transition: color 0.3s;
-    opacity: 0.5;
+  color: rgb(20, 20, 20);
+  background-color: #4d779f;
+  padding: 0 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 10px;
+  transition: color 0.3s;
+  opacity: 0.5;
 }
 
 .link-button:hover {
@@ -197,12 +201,11 @@ hr {
   background-color: #272727;
 }
 
-
 /* Responsive Iframe */
 .responsive-iframe-container {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%;
   height: 0;
   overflow: hidden;
 }
@@ -218,25 +221,33 @@ hr {
 
 .responsive-iframe-container iframe, #project-media video, #project-media img {
   padding: 5px;
-}  
+}
 
 /* Responsive Design */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+    align-items: stretch;
+  }
+
   .container {
     flex-direction: column;
-    overflow-y: auto; /* Enable vertical scrolling for the container */
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
   }
 
   .media-container,
   .info-container {
+    flex: 0 0 auto;
     width: 100%;
-    height: auto; /* Let the height be determined by the content */
-    overflow: visible; /* Remove individual scrolling */
+    max-width: none;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
   }
-
-  .media-container {
-    flex: 1;
-  }
+}
 
   .info-container {
     flex: 1;

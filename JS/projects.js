@@ -60,9 +60,13 @@
             document.body.appendChild(nextBtn);
         }
 
+        const mediaContainer = document.querySelector('.media-container');
+        const rect = mediaContainer ? mediaContainer.getBoundingClientRect() : null;
+        const topPos = rect ? Math.max(120, Math.round(rect.top + Math.min(220, rect.height * 0.28))) : 220;
+
         [prevBtn, nextBtn].forEach((btn) => {
             btn.style.position = 'fixed';
-            btn.style.top = '50%';
+            btn.style.top = `${topPos}px`;
             btn.style.transform = 'translateY(-50%)';
             btn.style.zIndex = '9999';
             btn.style.width = '44px';
@@ -82,9 +86,7 @@
             btn.style.userSelect = 'none';
         });
 
-        const mediaContainer = document.querySelector('.media-container');
-        if (mediaContainer) {
-            const rect = mediaContainer.getBoundingClientRect();
+        if (rect) {
             const leftPos = Math.max(16, Math.round(rect.left + 16));
             const rightPos = Math.max(16, Math.round(window.innerWidth - rect.right + 16));
 

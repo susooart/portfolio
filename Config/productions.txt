@@ -4,27 +4,18 @@
 ---
 ASSISTANT TECHNICAL INSTRUCTOR
 UNIVERSIDAD DEL ATLÁNTICO MEDIO (UNAM)
-Date (2025-2026)
-https://productionimage.jpg 
-Development and delivery of educational content.
-Support in classroom management and lesson planning.
-Use of advanced software and digital production tools.
-Practical training in areas related to digital production and emerging technologies.
-Continuous updating of technical knowledge according to industry requirements.
+2025-2026
+https://productionimage.jpg
+Development and delivery of educational content; support in classroom management and lesson planning; use of advanced software and digital production tools; practical training in digital production and emerging technologies; continuous updating of technical knowledge.
 ---
 3D ARTIST / DIGITAL COMPOSITOR
 AMUSE ANIMATION
-Date (2021-2025)
-https://productionimage.jpg 
-3D modelling of different types of assets, characters, and environments.
-Digital compositing for production projects.
-Creation and editing of 2D VFX.
-Use of Blender and Nuke in 3D production and digital compositing
+2021-2025
+https://productionimage.jpg
+3D modelling of assets, characters, and environments; digital compositing for production projects; creation and editing of 2D VFX; use of Blender and Nuke.
 ---
 3D ARTIST
 DINO RIOT
-Date (i.e 2019-2021)
-3D Modeling and animation.
-Shading.
-Layout.
----
+2019-2021
+https://productionimage.jpg
+3D Modeling and animation; Shading; Layout.

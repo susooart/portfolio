@@ -65,7 +65,6 @@
 
         [prevBtn, nextBtn].forEach((btn) => {
             btn.style.position = 'absolute';
-            btn.style.top = '50%';
             btn.style.transform = 'translateY(-50%)';
             btn.style.zIndex = '20';
             btn.style.width = '42px';
@@ -81,9 +80,34 @@
             btn.style.userSelect = 'none';
         });
 
+        const activeItem = document.querySelector('#project-media .media-item.active');
+        const targetEl = activeItem
+            ? (activeItem.querySelector('.img-container, video, iframe') || activeItem)
+            : null;
+
+        if (targetEl) {
+            const containerRect = mediaContainer.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+
+            if (targetRect.width > 0 && targetRect.height > 0) {
+                const centerY = (targetRect.top - containerRect.top) + mediaContainer.scrollTop + (targetRect.height / 2);
+                const leftEdge = Math.max(10, (targetRect.left - containerRect.left) + mediaContainer.scrollLeft + 12);
+                const rightEdge = Math.max(10, (containerRect.right - targetRect.right) - mediaContainer.scrollLeft + 12);
+
+                prevBtn.style.top = `${centerY}px`;
+                nextBtn.style.top = `${centerY}px`;
+                prevBtn.style.left = `${leftEdge}px`;
+                prevBtn.style.right = 'auto';
+                nextBtn.style.right = `${rightEdge}px`;
+                nextBtn.style.left = 'auto';
+                return;
+            }
+        }
+
+        prevBtn.style.top = '50%';
+        nextBtn.style.top = '50%';
         prevBtn.style.left = '14px';
         prevBtn.style.right = 'auto';
-
         nextBtn.style.right = '14px';
         nextBtn.style.left = 'auto';
     };
@@ -217,6 +241,8 @@
                     video.pause();
                 }
             });
+
+            requestAnimationFrame(() => attachArrowsToMediaEdges());
         };
 
         const navigateMedia = (direction) => {
@@ -269,9 +295,15 @@
                 }
 
                 mediaContainer.appendChild(fragment);
+
+                mediaContainer.querySelectorAll('img, video, iframe').forEach((mediaEl) => {
+                    mediaEl.addEventListener('load', attachArrowsToMediaEdges);
+                    mediaEl.addEventListener('loadedmetadata', attachArrowsToMediaEdges);
+                });
+
                 currentMediaIndex = 0;
                 updateCarouselView();
-                attachArrowsToMediaEdges();
+                setTimeout(attachArrowsToMediaEdges, 100);
             } catch (error) {
                 console.error('Error loading project media:', error);
                 attachArrowsToMediaEdges();
@@ -543,6 +575,8 @@
                 mediaContainer.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
+
+        window.addEventListener('resize', attachArrowsToMediaEdges);
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {

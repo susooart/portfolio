@@ -48,49 +48,62 @@
         }
     };
 
-    const attachArrowsToMediaEdges = () => {
-        const mediaContainer = document.querySelector('.media-container');
+    const setFixedArrowPositions = () => {
         const prevBtn = document.getElementById('prev-project');
         const nextBtn = document.getElementById('next-project');
-        if (!mediaContainer || !prevBtn || !nextBtn) return;
+        if (!prevBtn || !nextBtn) return;
 
-        mediaContainer.style.position = 'relative';
-
-        if (prevBtn.parentElement !== mediaContainer) {
-            mediaContainer.appendChild(prevBtn);
+        if (prevBtn.parentElement !== document.body) {
+            document.body.appendChild(prevBtn);
         }
-        if (nextBtn.parentElement !== mediaContainer) {
-            mediaContainer.appendChild(nextBtn);
+        if (nextBtn.parentElement !== document.body) {
+            document.body.appendChild(nextBtn);
         }
 
         [prevBtn, nextBtn].forEach((btn) => {
-            btn.style.position = 'absolute';
+            btn.style.position = 'fixed';
             btn.style.top = '50%';
             btn.style.transform = 'translateY(-50%)';
-            btn.style.zIndex = '20';
-            btn.style.width = '42px';
-            btn.style.height = '42px';
+            btn.style.zIndex = '9999';
+            btn.style.width = '44px';
+            btn.style.height = '44px';
+            btn.style.minWidth = '44px';
+            btn.style.minHeight = '44px';
+            btn.style.maxWidth = '44px';
+            btn.style.maxHeight = '44px';
             btn.style.borderRadius = '50%';
             btn.style.display = 'flex';
             btn.style.alignItems = 'center';
             btn.style.justifyContent = 'center';
-            btn.style.backgroundColor = 'rgba(20, 20, 20, 0.65)';
+            btn.style.backgroundColor = 'rgba(20, 20, 20, 0.72)';
             btn.style.color = '#ffffff';
-            btn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            btn.style.border = '1px solid rgba(255, 255, 255, 0.22)';
             btn.style.cursor = 'pointer';
             btn.style.userSelect = 'none';
         });
 
-        prevBtn.style.left = '14px';
-        prevBtn.style.right = 'auto';
+        const mediaContainer = document.querySelector('.media-container');
+        if (mediaContainer) {
+            const rect = mediaContainer.getBoundingClientRect();
+            const leftPos = Math.max(16, Math.round(rect.left + 16));
+            const rightPos = Math.max(16, Math.round(window.innerWidth - rect.right + 16));
 
-        nextBtn.style.right = '14px';
-        nextBtn.style.left = 'auto';
+            prevBtn.style.left = `${leftPos}px`;
+            prevBtn.style.right = 'auto';
+
+            nextBtn.style.right = `${rightPos}px`;
+            nextBtn.style.left = 'auto';
+        } else {
+            prevBtn.style.left = '16px';
+            prevBtn.style.right = 'auto';
+            nextBtn.style.right = '16px';
+            nextBtn.style.left = 'auto';
+        }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
         addHomeButtonUnderSoftware();
-        attachArrowsToMediaEdges();
+        setFixedArrowPositions();
 
         let projects = [];
         let mediaItems = [];
@@ -154,6 +167,7 @@
                 }
 
                 addHomeButtonUnderSoftware();
+                setFixedArrowPositions();
             } catch (error) {
                 console.error('Error loading project description:', error);
                 addHomeButtonUnderSoftware();
@@ -217,8 +231,6 @@
                     video.pause();
                 }
             });
-
-            attachArrowsToMediaEdges();
         };
 
         const navigateMedia = (direction) => {
@@ -273,9 +285,10 @@
                 mediaContainer.appendChild(fragment);
                 currentMediaIndex = 0;
                 updateCarouselView();
+                setFixedArrowPositions();
             } catch (error) {
                 console.error('Error loading project media:', error);
-                attachArrowsToMediaEdges();
+                setFixedArrowPositions();
             }
         };
 
@@ -545,6 +558,8 @@
             });
         }
 
+        window.addEventListener('resize', setFixedArrowPositions);
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 window.location.href = '../../index.html';
@@ -571,7 +586,7 @@
                 fetchStats()
             ]);
             addHomeButtonUnderSoftware();
-            attachArrowsToMediaEdges();
+            setFixedArrowPositions();
         };
 
         init();

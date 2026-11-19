@@ -4,6 +4,6 @@ mitsubishi
 nukeue
 vector
 daxter
-trave
+traver
 precursor
 tachi

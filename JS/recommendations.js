@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 } else if (index < currentIndex) {
                     debouncedShowRecommendation(index, 'right');
                 }
+                startAutoRotate();
             }
         });
 
@@ -135,13 +136,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     // Swiped right
                     newIndex = (currentIndex - 1 + recommendationsElements.length) % recommendationsElements.length;
                 }
-                showRecommendation(newIndex);
+                showRecommendation(newIndex, diffX > 0 ? 'left' : 'right');
                 isSwiping = false;
             }
         });
 
         recommendationContent.addEventListener('touchend', () => {
             isSwiping = false;
+            startAutoRotate();
         });
 
         // Adjust height to ensure dots are always visible
@@ -155,6 +157,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         window.addEventListener('resize', adjustHeight);
         adjustHeight(); // Initial call to set height
+
+        // Auto-rotate every X milliseconds
+        const AUTO_ROTATE_MS = 5000;
+        let autoRotateTimer = null;
+
+        function startAutoRotate() {
+            stopAutoRotate();
+            if (recommendationsElements.length > 1) {
+                autoRotateTimer = setInterval(() => {
+                    if (!isTransitioning) {
+                        const nextIndex = (currentIndex + 1) % recommendationsElements.length;
+                        showRecommendation(nextIndex, 'left');
+                    }
+                }, AUTO_ROTATE_MS);
+            }
+        }
+
+        function stopAutoRotate() {
+            if (autoRotateTimer) {
+                clearInterval(autoRotateTimer);
+                autoRotateTimer = null;
+            }
+        }
+
+        recommendationContent.addEventListener('mouseenter', stopAutoRotate);
+        recommendationContent.addEventListener('mouseleave', startAutoRotate);
+
+        startAutoRotate();
 
     } catch (error) {
         console.error('Failed to load recommendations:', error);

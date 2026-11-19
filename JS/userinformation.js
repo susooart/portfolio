@@ -34,7 +34,7 @@ function addUserInformation() {
 
             // Create and append the user name as a link
             const userNameLink = document.createElement("a");
-            userNameLink.href = "../../index.html";
+            userNameLink.href = window.location.pathname.includes('/Projects/') ? "../../index.html" : "index.html";
             userNameLink.className = "user-name-link";
 
             const userName = document.createElement("h1");

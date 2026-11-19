@@ -1,54 +1,61 @@
 function addUserInformation() {
-    // Determine the base path dynamically
-    let basePath = '';
+    let configPath = 'Config/userinformation.txt';
+    let assetPrefix = '';
+
     if (window.location.pathname.includes('/Projects/')) {
-        basePath = '../../Config/userinformation.txt';
+        configPath = '../../Config/userinformation.txt';
+        assetPrefix = '../../';
     } else if (window.location.pathname.includes('/HTML/')) {
-        basePath = '../Config/userinformation.txt';
-    } else {
-        basePath = 'Config/userinformation.txt'; // Default case if in root or unexpected location
+        configPath = '../Config/userinformation.txt';
+        assetPrefix = '../';
     }
 
-    fetch(basePath)
-        .then(response => response.text())
+    fetch(configPath)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.text();
+        })
         .then(data => {
-            const lines = data.split('\n').map(line => line.trim());
+            const lines = data.split('\n').map(line => line.trim()).filter(line => line);
             const [profilePicUrl, profileName, profileRole, location, ...socials] = lines;
 
-            // Get the container where the user info should be added
-            const container = document.querySelector('.top-container'); // Select the specific container
+            const container = document.querySelector('.top-container');
+            if (!container) return;
 
-            // Create a document fragment for better performance
             const fragment = document.createDocumentFragment();
 
-            // Create the user info panel
             const userInfoPanel = document.createElement("div");
             userInfoPanel.className = "user-info-panel";
 
-            // Create and append the image
-            const img = document.createElement("img");
-            img.src = profilePicUrl; // Your Profile Pic URL from txt
-            img.alt = "Profile Picture";
-            img.className = "profile-pic";
-            userInfoPanel.appendChild(img);
+            if (profilePicUrl) {
+                const img = document.createElement("img");
+                const isExternalOrRoot =
+                    profilePicUrl.startsWith('http') ||
+                    profilePicUrl.startsWith('/') ||
+                    profilePicUrl.startsWith('../');
+                img.src = isExternalOrRoot ? profilePicUrl : `${assetPrefix}${profilePicUrl}`;
+                img.alt = "Profile Picture";
+                img.className = "profile-pic";
+                img.addEventListener('error', () => {
+                    img.style.display = 'none';
+                });
+                userInfoPanel.appendChild(img);
+            }
 
-            // Create and append the user name as a link
             const userNameLink = document.createElement("a");
             userNameLink.href = window.location.pathname.includes('/Projects/') ? "../../index.html" : "index.html";
             userNameLink.className = "user-name-link";
 
             const userName = document.createElement("h1");
             userName.className = "user-name";
-            userName.textContent = profileName; // Your Profile Name from txt
+            userName.textContent = profileName;
             userNameLink.appendChild(userName);
             userInfoPanel.appendChild(userNameLink);
 
-            // Create and append the user role
             const userRole = document.createElement("h2");
-            userRole.textContent = profileRole; // Your Current Title & Studio from txt
+            userRole.textContent = profileRole;
             userInfoPanel.appendChild(userRole);
 
-            // Create and append the location
             const userLocationContainer = document.createElement("div");
             userLocationContainer.className = "user-location-container";
 
@@ -58,17 +65,15 @@ function addUserInformation() {
             userLocationContainer.appendChild(locationIcon);
 
             const userLocation = document.createElement("h2");
-            userLocation.textContent = location; // Your Location from txt
+            userLocation.textContent = location;
             userLocationContainer.appendChild(userLocation);
 
             userInfoPanel.appendChild(userLocationContainer);
 
-            // Create and append the social icons
             const socialIcons = document.createElement("div");
             socialIcons.className = "social-icons";
             userInfoPanel.appendChild(socialIcons);
 
-            // Define the mapping of keywords to icon classes
             const socialIconMap = {
                 'x.com': "fa-brands fa-x-twitter",
                 'facebook.com': "fa-brands fa-square-facebook",
@@ -97,12 +102,10 @@ function addUserInformation() {
                 'email': "fas fa-envelope"
             };
 
-            // Adding social links based on the detected type
             socials.forEach(social => {
                 let iconClass;
                 let url = social;
 
-                // Detect the type of social link
                 const socialType = Object.keys(socialIconMap).find(key => social.includes(key)) || 'email';
                 iconClass = socialIconMap[socialType];
                 if (socialType === 'email') {
@@ -120,14 +123,10 @@ function addUserInformation() {
                 }
             });
 
-            // Append the user info panel to the fragment
             fragment.appendChild(userInfoPanel);
-
-            // Append the fragment to the container
             container.appendChild(fragment);
         })
         .catch(error => console.error('Error loading user information:', error));
 }
 
-// Call the function when the document is fully loaded
 document.addEventListener("DOMContentLoaded", addUserInformation);

@@ -103,6 +103,17 @@
         }
     };
 
+    const getSiteRootPath = () => {
+        const pathname = window.location.pathname;
+        const lower = pathname.toLowerCase();
+        const projectsToken = '/projects/';
+        const idx = lower.indexOf(projectsToken);
+        if (idx !== -1) {
+            return pathname.slice(0, idx + 1);
+        }
+        return '../../';
+    };
+
     const getCurrentProjectSlug = () => {
         const parts = window.location.pathname.split('/').filter(Boolean);
         const projectsIdx = parts.findIndex(p => p.toLowerCase() === 'projects');
@@ -117,25 +128,56 @@
         if (!cleaned) return null;
 
         if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
-            return { href: cleaned, mediaBase: '', slug: cleaned };
+            return { href: cleaned, candidateHrefs: [cleaned], mediaBase: '', slug: cleaned };
         }
 
+        const siteRoot = getSiteRootPath();
         const normalized = cleaned.replace(/^\/+/, '').replace(/\/+$/, '');
+
         if (normalized.endsWith('.html')) {
             const folder = normalized.split('/').slice(0, -1).join('/');
+            const directHref = `${siteRoot}${normalized}`;
             return {
-                href: `../../${normalized}`,
-                mediaBase: folder ? `../../${folder}/` : '',
-                slug: folder.split('/').pop() || normalized
+                href: directHref,
+                candidateHrefs: [directHref],
+                mediaBase: folder ? `${siteRoot}${folder}/` : siteRoot,
+                slug: folder.split('/').pop() || normalized.replace(/\.html$/i, '')
             };
         }
 
         const folderPath = normalized.includes('/') ? normalized : `Projects/${normalized}`;
+        const slug = normalized.split('/').pop();
+        const mediaBase = `${siteRoot}${folderPath}/`;
+        const candidateHrefs = [
+            `${mediaBase}index.html`,
+            `${mediaBase}project.html`,
+            `${mediaBase}${slug}.html`,
+            mediaBase
+        ];
+
         return {
-            href: `../../${folderPath}/index.html`,
-            mediaBase: `../../${folderPath}/`,
-            slug: normalized.split('/').pop()
+            href: candidateHrefs[0],
+            candidateHrefs,
+            mediaBase,
+            slug
         };
+    };
+
+    const resolveWorkingProjectHref = async (entry) => {
+        if (!entry || !entry.candidateHrefs || entry.candidateHrefs.length <= 1) {
+            return entry ? entry.href : '';
+        }
+
+        for (const candidate of entry.candidateHrefs) {
+            try {
+                const res = await fetch(candidate, { method: 'HEAD' });
+                if (res.ok) return candidate;
+            } catch {
+                // Probar siguiente candidato
+            }
+        }
+
+        return entry.href;
     };
 
     const findProjectThumbnail = async (entry) => {
@@ -155,7 +197,7 @@
                     const cleanUrl = firstUrl.split('?')[0].toLowerCase();
                     if (/\.(jpeg|jpg|gif|png|webp)$/.test(cleanUrl)) {
                         if (firstUrl.startsWith('http') || firstUrl.startsWith('/')) return firstUrl;
-                        if (firstUrl.startsWith('Resources/')) return `../../${firstUrl}`;
+                        if (firstUrl.startsWith('Resources/')) return `${getSiteRootPath()}${firstUrl}`;
                         return `${entry.mediaBase}${firstUrl}`;
                     }
                 }
@@ -196,8 +238,10 @@
             const thumbUrl = await findProjectThumbnail(item);
             if (!thumbUrl) continue;
 
+            const workingHref = await resolveWorkingProjectHref(item);
+
             const cardLink = document.createElement('a');
-            cardLink.href = item.href;
+            cardLink.href = workingHref;
             cardLink.title = item.slug;
             cardLink.style.display = 'block';
             cardLink.style.aspectRatio = '16 / 9';
@@ -433,7 +477,7 @@
 
                     urls = urls.map(url => {
                         if (url.startsWith('http') || url.startsWith('/')) return url;
-                        if (url.startsWith('Resources/')) return `../../${url}`;
+                        if (url.startsWith('Resources/')) return `${getSiteRootPath()}${url}`;
                         return basePath + url;
                     });
 

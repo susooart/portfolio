@@ -143,7 +143,7 @@
         const mediaBaseUrl = new URL(`${folderPath}/`, siteRootUrl).href;
 
         return {
-            href: new URL(`${folderPath}/index.html`, siteRootUrl).href,
+            href: new URL(`${folderPath}/${slug}.html`, siteRootUrl).href,
             mediaBaseUrl,
             slug
         };

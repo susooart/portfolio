@@ -2,9 +2,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const recommendationContent = document.querySelector('.recommendation-content');
     const dotsContainer = document.getElementById('recommendation-dots');
 
-    if (!recommendationContent || !dotsContainer) {
-        console.error('Recommendation content or dots container not found');
+    if (!recommendationContent) {
+        console.error('Recommendation content container not found');
         return;
+    }
+
+    if (dotsContainer) {
+        dotsContainer.innerHTML = '';
+        dotsContainer.style.display = 'none';
     }
 
     try {
@@ -15,10 +20,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const text = await response.text();
         const recommendations = text.split('---').map(rec => rec.trim()).filter(rec => rec);
 
-        const recommendationFragment = document.createDocumentFragment();
-        const dotsFragment = document.createDocumentFragment();
+        recommendationContent.innerHTML = '';
+        recommendationContent.style.minHeight = 'auto';
+        recommendationContent.style.height = 'auto';
+        recommendationContent.style.overflow = 'visible';
 
-        recommendations.forEach((rec, index) => {
+        const recommendationFragment = document.createDocumentFragment();
+
+        recommendations.forEach((rec) => {
             const lines = rec.split('\n').map(line => line.trim()).filter(line => line);
             if (lines.length === 0) return;
 
@@ -30,8 +39,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             const quote = hasAvatar ? (lines[4] || '') : (lines[3] || '');
 
             const recommendation = document.createElement("div");
-            recommendation.className = "recommendation";
-            if (index === 0) recommendation.classList.add("active");
+            recommendation.className = "recommendation active";
+            recommendation.style.display = "block";
+            recommendation.style.opacity = "1";
+            recommendation.style.position = "static";
+            recommendation.style.transform = "none";
+            recommendation.style.marginBottom = "24px";
 
             recommendation.innerHTML = `
                 <div class="recommendation-header">
@@ -42,150 +55,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${date ? `<p class="recommendation-date">${date}</p>` : ''}
                     </div>
                 </div>
-                ${quote ? `<p class="recommendation-quote">"${quote}"</p>` : ''}
+                ${quote ? `<p class="recommendation-quote">${quote}</p>` : ''}
             `;
 
             recommendationFragment.appendChild(recommendation);
-
-            const dot = document.createElement("span");
-            dot.classList.add("dot");
-            if (index === 0) dot.classList.add("active");
-            dot.dataset.index = index;
-            dotsFragment.appendChild(dot);
         });
 
         recommendationContent.appendChild(recommendationFragment);
-        dotsContainer.appendChild(dotsFragment);
-
-        const recommendationsElements = document.querySelectorAll(".recommendation");
-        const dots = document.querySelectorAll(".dot");
-        let currentIndex = 0;
-        let isTransitioning = false;
-
-        function showRecommendation(index, direction) {
-            if (isTransitioning || !recommendationsElements.length) return;
-            isTransitioning = true;
-
-            const current = recommendationsElements[currentIndex];
-            const next = recommendationsElements[index];
-
-            if (direction === 'left') {
-                current.classList.add('recommendation-exit-left');
-                next.classList.add('recommendation-enter-right');
-            } else if (direction === 'right') {
-                current.classList.add('recommendation-exit-right');
-                next.classList.add('recommendation-enter-left');
-            }
-
-            setTimeout(() => {
-                current.classList.remove('active', 'recommendation-exit-left', 'recommendation-exit-right');
-                next.classList.add('active');
-                next.classList.remove('recommendation-enter-left', 'recommendation-enter-right');
-                currentIndex = index;
-                isTransitioning = false;
-            }, 500); // Match the CSS transition duration
-
-            dots.forEach((dot, i) => {
-                dot.classList.toggle("active", i === index);
-            });
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), wait);
-            };
-        }
-
-        const debouncedShowRecommendation = debounce((index, direction) => showRecommendation(index, direction), 500);
-
-        dotsContainer.addEventListener("click", (event) => {
-            if (event.target.classList.contains('dot')) {
-                const index = parseInt(event.target.dataset.index, 10);
-                if (index > currentIndex) {
-                    debouncedShowRecommendation(index, 'left');
-                } else if (index < currentIndex) {
-                    debouncedShowRecommendation(index, 'right');
-                }
-                startAutoRotate();
-            }
-        });
-
-        // Swipe detection
-        let startX;
-        let isSwiping = false;
-
-        recommendationContent.addEventListener('touchstart', (event) => {
-            startX = event.touches[0].clientX;
-            isSwiping = true;
-        });
-
-        recommendationContent.addEventListener('touchmove', (event) => {
-            if (!isSwiping) return;
-            const moveX = event.touches[0].clientX;
-            const diffX = startX - moveX;
-
-            if (Math.abs(diffX) > 50) {
-                let newIndex;
-                if (diffX > 0) {
-                    // Swiped left
-                    newIndex = (currentIndex + 1) % recommendationsElements.length;
-                } else {
-                    // Swiped right
-                    newIndex = (currentIndex - 1 + recommendationsElements.length) % recommendationsElements.length;
-                }
-                showRecommendation(newIndex, diffX > 0 ? 'left' : 'right');
-                isSwiping = false;
-            }
-        });
-
-        recommendationContent.addEventListener('touchend', () => {
-            isSwiping = false;
-            startAutoRotate();
-        });
-
-        // Adjust height to ensure dots are always visible
-        function adjustHeight() {
-            const activeRecommendation = document.querySelector('.recommendation.active');
-            if (activeRecommendation) {
-                const activeHeight = activeRecommendation.getBoundingClientRect().height;
-                recommendationContent.style.minHeight = `${activeHeight + 60}px`; // Add space for dots
-            }
-        }
-
-        window.addEventListener('resize', adjustHeight);
-        adjustHeight(); // Initial call to set height
-
-        // Auto-rotate every X milliseconds
-        const AUTO_ROTATE_MS = 5000;
-        let autoRotateTimer = null;
-
-        function startAutoRotate() {
-            stopAutoRotate();
-            if (recommendationsElements.length > 1) {
-                autoRotateTimer = setInterval(() => {
-                    if (!isTransitioning) {
-                        const nextIndex = (currentIndex + 1) % recommendationsElements.length;
-                        showRecommendation(nextIndex, 'left');
-                    }
-                }, AUTO_ROTATE_MS);
-            }
-        }
-
-        function stopAutoRotate() {
-            if (autoRotateTimer) {
-                clearInterval(autoRotateTimer);
-                autoRotateTimer = null;
-            }
-        }
-
-        recommendationContent.addEventListener('mouseenter', stopAutoRotate);
-        recommendationContent.addEventListener('mouseleave', startAutoRotate);
-
-        startAutoRotate();
-
     } catch (error) {
         console.error('Failed to load recommendations:', error);
     }

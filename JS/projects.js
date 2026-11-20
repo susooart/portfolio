@@ -103,6 +103,168 @@
         }
     };
 
+    const getCurrentProjectSlug = () => {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const projectsIdx = parts.findIndex(p => p.toLowerCase() === 'projects');
+        if (projectsIdx !== -1 && parts[projectsIdx + 1]) {
+            return parts[projectsIdx + 1];
+        }
+        return parts[parts.length - 2] || '';
+    };
+
+    const resolveProjectEntry = (rawEntry) => {
+        const cleaned = rawEntry.trim();
+        if (!cleaned) return null;
+
+        if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+            return { href: cleaned, mediaBase: '', slug: cleaned };
+        }
+
+        const normalized = cleaned.replace(/^\/+/, '').replace(/\/+$/, '');
+        if (normalized.endsWith('.html')) {
+            const folder = normalized.split('/').slice(0, -1).join('/');
+            return {
+                href: `../../${normalized}`,
+                mediaBase: folder ? `../../${folder}/` : '',
+                slug: folder.split('/').pop() || normalized
+            };
+        }
+
+        const folderPath = normalized.includes('/') ? normalized : `Projects/${normalized}`;
+        return {
+            href: `../../${folderPath}/index.html`,
+            mediaBase: `../../${folderPath}/`,
+            slug: normalized.split('/').pop()
+        };
+    };
+
+    const findProjectThumbnail = async (entry) => {
+        if (!entry.mediaBase) return '';
+
+        try {
+            const res = await fetch(`${entry.mediaBase}media.txt`);
+            if (res.ok) {
+                const text = await res.text();
+                const lines = text
+                    .split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l && !l.startsWith('#'));
+
+                for (const line of lines) {
+                    const firstUrl = line.split(' // ')[0].trim();
+                    const cleanUrl = firstUrl.split('?')[0].toLowerCase();
+                    if (/\.(jpeg|jpg|gif|png|webp)$/.test(cleanUrl)) {
+                        if (firstUrl.startsWith('http') || firstUrl.startsWith('/')) return firstUrl;
+                        if (firstUrl.startsWith('Resources/')) return `../../${firstUrl}`;
+                        return `${entry.mediaBase}${firstUrl}`;
+                    }
+                }
+            }
+        } catch {
+            // Fallback a archivos comunes de thumbnail si no hay imagen en media.txt
+        }
+
+        const candidates = ['thumb.jpg', 'thumb.png', 'thumb.webp', 'thumbnail.jpg', 'thumbnail.png', 'cover.jpg', 'cover.png'];
+        for (const file of candidates) {
+            try {
+                const check = await fetch(`${entry.mediaBase}${file}`, { method: 'HEAD' });
+                if (check.ok) return `${entry.mediaBase}${file}`;
+            } catch {
+                // Continuar probando candidatos
+            }
+        }
+
+        return '';
+    };
+
+    const renderOtherProjectsCarousel = async (projectEntries) => {
+        const mediaContainer = document.querySelector('.media-container');
+        const anchorParent = mediaContainer ? mediaContainer.parentElement : document.body;
+        if (!anchorParent || document.getElementById('other-projects-section')) return;
+
+        const currentSlug = getCurrentProjectSlug().toLowerCase();
+        const parsedEntries = projectEntries
+            .map(resolveProjectEntry)
+            .filter(item => item && item.slug.toLowerCase() !== currentSlug);
+
+        if (!parsedEntries.length) return;
+
+        const shuffled = [...parsedEntries].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, Math.min(3, shuffled.length));
+
+        const section = document.createElement('div');
+        section.id = 'other-projects-section';
+        section.style.width = '100%';
+        section.style.marginTop = '28px';
+        section.style.paddingTop = '18px';
+        section.style.borderTop = '1px solid rgba(255, 255, 255, 0.12)';
+        section.style.boxSizing = 'border-box';
+
+        const heading = document.createElement('h3');
+        heading.textContent = 'Other Projects';
+        heading.style.margin = '0 0 14px 0';
+        heading.style.fontSize = '16px';
+        heading.style.fontWeight = '600';
+        heading.style.color = '#d7d7d7';
+
+        const carousel = document.createElement('div');
+        carousel.className = 'other-projects-carousel';
+        carousel.style.display = 'grid';
+        carousel.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+        carousel.style.gap = '14px';
+        carousel.style.width = '100%';
+
+        for (const item of selected) {
+            const thumbUrl = await findProjectThumbnail(item);
+            if (!thumbUrl) continue;
+
+            const cardLink = document.createElement('a');
+            cardLink.href = item.href;
+            cardLink.title = item.slug;
+            cardLink.style.display = 'block';
+            cardLink.style.aspectRatio = '16 / 9';
+            cardLink.style.overflow = 'hidden';
+            cardLink.style.borderRadius = '8px';
+            cardLink.style.backgroundColor = '#1a1a1a';
+            cardLink.style.border = '1px solid rgba(255, 255, 255, 0.12)';
+            cardLink.style.textDecoration = 'none';
+
+            const img = document.createElement('img');
+            img.src = thumbUrl;
+            img.alt = item.slug;
+            img.loading = 'lazy';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            img.style.transition = 'transform 0.25s ease';
+
+            cardLink.addEventListener('mouseenter', () => {
+                img.style.transform = 'scale(1.04)';
+                cardLink.style.borderColor = '#edb049';
+            });
+
+            cardLink.addEventListener('mouseleave', () => {
+                img.style.transform = 'scale(1)';
+                cardLink.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+            });
+
+            cardLink.appendChild(img);
+            carousel.appendChild(cardLink);
+        }
+
+        if (!carousel.children.length) return;
+
+        section.appendChild(heading);
+        section.appendChild(carousel);
+
+        if (mediaContainer && mediaContainer.nextSibling) {
+            anchorParent.insertBefore(section, mediaContainer.nextSibling);
+        } else {
+            anchorParent.appendChild(section);
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         addHomeButtonUnderSoftware();
         setFixedArrowPositions();
@@ -589,6 +751,7 @@
             ]);
             addHomeButtonUnderSoftware();
             setFixedArrowPositions();
+            await renderOtherProjectsCarousel(projects);
         };
 
         init();

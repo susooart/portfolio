@@ -179,8 +179,7 @@
 
     const renderOtherProjectsCarousel = async (projectEntries) => {
         const mediaContainer = document.querySelector('.media-container');
-        const anchorParent = mediaContainer ? mediaContainer.parentElement : document.body;
-        if (!anchorParent || document.getElementById('other-projects-section')) return;
+        if (!mediaContainer || document.getElementById('other-projects-section')) return;
 
         const currentSlug = getCurrentProjectSlug().toLowerCase();
         const parsedEntries = projectEntries
@@ -190,31 +189,10 @@
         if (!parsedEntries.length) return;
 
         const shuffled = [...parsedEntries].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, Math.min(3, shuffled.length));
+        const pickedCards = [];
 
-        const section = document.createElement('div');
-        section.id = 'other-projects-section';
-        section.style.width = '100%';
-        section.style.marginTop = '28px';
-        section.style.paddingTop = '18px';
-        section.style.borderTop = '1px solid rgba(255, 255, 255, 0.12)';
-        section.style.boxSizing = 'border-box';
-
-        const heading = document.createElement('h3');
-        heading.textContent = 'Other Projects';
-        heading.style.margin = '0 0 14px 0';
-        heading.style.fontSize = '16px';
-        heading.style.fontWeight = '600';
-        heading.style.color = '#d7d7d7';
-
-        const carousel = document.createElement('div');
-        carousel.className = 'other-projects-carousel';
-        carousel.style.display = 'grid';
-        carousel.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-        carousel.style.gap = '14px';
-        carousel.style.width = '100%';
-
-        for (const item of selected) {
+        for (const item of shuffled) {
+            if (pickedCards.length >= 3) break;
             const thumbUrl = await findProjectThumbnail(item);
             if (!thumbUrl) continue;
 
@@ -250,19 +228,41 @@
             });
 
             cardLink.appendChild(img);
-            carousel.appendChild(cardLink);
+            pickedCards.push(cardLink);
         }
 
-        if (!carousel.children.length) return;
+        if (!pickedCards.length) return;
+
+        const section = document.createElement('div');
+        section.id = 'other-projects-section';
+        section.style.width = '100%';
+        section.style.maxWidth = '920px';
+        section.style.margin = '24px auto 0 auto';
+        section.style.padding = '16px 20px 0 20px';
+        section.style.borderTop = '1px solid rgba(255, 255, 255, 0.12)';
+        section.style.boxSizing = 'border-box';
+        section.style.order = '999';
+        section.style.flexShrink = '0';
+
+        const heading = document.createElement('h3');
+        heading.textContent = 'Other Projects';
+        heading.style.margin = '0 0 12px 0';
+        heading.style.fontSize = '15px';
+        heading.style.fontWeight = '600';
+        heading.style.color = '#d7d7d7';
+
+        const carousel = document.createElement('div');
+        carousel.className = 'other-projects-carousel';
+        carousel.style.display = 'grid';
+        carousel.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+        carousel.style.gap = '12px';
+        carousel.style.width = '100%';
+
+        pickedCards.forEach(card => carousel.appendChild(card));
 
         section.appendChild(heading);
         section.appendChild(carousel);
-
-        if (mediaContainer && mediaContainer.nextSibling) {
-            anchorParent.insertBefore(section, mediaContainer.nextSibling);
-        } else {
-            anchorParent.appendChild(section);
-        }
+        mediaContainer.appendChild(section);
     };
 
     document.addEventListener('DOMContentLoaded', () => {

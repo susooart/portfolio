@@ -120,64 +120,27 @@
         if (projectsIdx !== -1 && parts[projectsIdx + 1]) {
             return parts[projectsIdx + 1];
         }
-        return parts[parts.length - 2] || '';
+        return '';
     };
 
-    const resolveProjectEntry = (rawEntry) => {
+    const resolveProjectEntry = (rawEntry, siteRoot) => {
         const cleaned = rawEntry.trim();
         if (!cleaned) return null;
 
         if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
-            return { href: cleaned, candidateHrefs: [cleaned], mediaBase: '', slug: cleaned };
+            return { href: cleaned, mediaBase: '', slug: cleaned };
         }
 
-        const siteRoot = getSiteRootPath();
         const normalized = cleaned.replace(/^\/+/, '').replace(/\/+$/, '');
-
-        if (normalized.endsWith('.html')) {
-            const folder = normalized.split('/').slice(0, -1).join('/');
-            const directHref = `${siteRoot}${normalized}`;
-            return {
-                href: directHref,
-                candidateHrefs: [directHref],
-                mediaBase: folder ? `${siteRoot}${folder}/` : siteRoot,
-                slug: folder.split('/').pop() || normalized.replace(/\.html$/i, '')
-            };
-        }
-
-        const folderPath = normalized.includes('/') ? normalized : `Projects/${normalized}`;
         const slug = normalized.split('/').pop();
+        const folderPath = normalized.includes('/') ? normalized : `Projects/${slug}`;
         const mediaBase = `${siteRoot}${folderPath}/`;
-        const candidateHrefs = [
-            `${mediaBase}index.html`,
-            `${mediaBase}project.html`,
-            `${mediaBase}${slug}.html`,
-            mediaBase
-        ];
 
         return {
-            href: candidateHrefs[0],
-            candidateHrefs,
+            href: `${mediaBase}index.html`,
             mediaBase,
             slug
         };
-    };
-
-    const resolveWorkingProjectHref = async (entry) => {
-        if (!entry || !entry.candidateHrefs || entry.candidateHrefs.length <= 1) {
-            return entry ? entry.href : '';
-        }
-
-        for (const candidate of entry.candidateHrefs) {
-            try {
-                const res = await fetch(candidate, { method: 'HEAD' });
-                if (res.ok) return candidate;
-            } catch {
-                // Probar siguiente candidato
-            }
-        }
-
-        return entry.href;
     };
 
     const findProjectThumbnail = async (entry) => {
@@ -223,9 +186,10 @@
         const mediaContainer = document.querySelector('.media-container');
         if (!mediaContainer || document.getElementById('other-projects-section')) return;
 
+        const siteRoot = getSiteRootPath();
         const currentSlug = getCurrentProjectSlug().toLowerCase();
         const parsedEntries = projectEntries
-            .map(resolveProjectEntry)
+            .map(item => resolveProjectEntry(item, siteRoot))
             .filter(item => item && item.slug.toLowerCase() !== currentSlug);
 
         if (!parsedEntries.length) return;
@@ -238,10 +202,8 @@
             const thumbUrl = await findProjectThumbnail(item);
             if (!thumbUrl) continue;
 
-            const workingHref = await resolveWorkingProjectHref(item);
-
             const cardLink = document.createElement('a');
-            cardLink.href = workingHref;
+            cardLink.href = item.href;
             cardLink.title = item.slug;
             cardLink.style.display = 'block';
             cardLink.style.aspectRatio = '16 / 9';

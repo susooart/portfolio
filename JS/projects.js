@@ -681,56 +681,77 @@
 
             if (hasCookieConsent()) {
                 mountIframe();
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.style.width = '100%';
-                placeholder.style.height = '100%';
-                placeholder.style.minHeight = '320px';
-                placeholder.style.display = 'flex';
-                placeholder.style.flexDirection = 'column';
-                placeholder.style.alignItems = 'center';
-                placeholder.style.justifyContent = 'center';
-                placeholder.style.gap = '12px';
-                placeholder.style.padding = '24px';
-                placeholder.style.boxSizing = 'border-box';
-                placeholder.style.backgroundColor = '#181818';
-                placeholder.style.border = '1px solid rgba(255, 255, 255, 0.15)';
-                placeholder.style.borderRadius = '8px';
-                placeholder.style.color = '#d7d7d7';
-                placeholder.style.textAlign = 'center';
-
-                const msg = document.createElement('p');
-                msg.style.margin = '0';
-                msg.style.maxWidth = '420px';
-                msg.style.fontSize = '14px';
-                msg.textContent = 'External YouTube embed is blocked until third-party cookies are accepted.';
-
-                const loadBtn = document.createElement('button');
-                loadBtn.type = 'button';
-                loadBtn.textContent = 'Accept & Load Video';
-                loadBtn.style.padding = '8px 16px';
-                loadBtn.style.borderRadius = '6px';
-                loadBtn.style.border = '1px solid #edb049';
-                loadBtn.style.backgroundColor = '#edb049';
-                loadBtn.style.color = '#141414';
-                loadBtn.style.fontWeight = '600';
-                loadBtn.style.cursor = 'pointer';
-
-                loadBtn.addEventListener('click', () => {
-                    setCookieConsent('accepted');
-                    mountIframe();
-                });
-
-                placeholder.appendChild(msg);
-                placeholder.appendChild(loadBtn);
-                mediaElement.appendChild(placeholder);
-
-                window.addEventListener('portfolioCookieConsentChanged', (event) => {
-                    if (event.detail && event.detail.consent === 'accepted') {
-                        mountIframe();
-                    }
-                }, { once: true });
+                return mediaElement;
             }
+
+            const placeholder = document.createElement('div');
+            placeholder.style.width = '100%';
+            placeholder.style.height = '100%';
+            placeholder.style.minHeight = '320px';
+            placeholder.style.display = 'flex';
+            placeholder.style.flexDirection = 'column';
+            placeholder.style.alignItems = 'center';
+            placeholder.style.justifyContent = 'center';
+            placeholder.style.gap = '12px';
+            placeholder.style.padding = '24px';
+            placeholder.style.boxSizing = 'border-box';
+            placeholder.style.backgroundColor = '#181818';
+            placeholder.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+            placeholder.style.borderRadius = '8px';
+            placeholder.style.color = '#d7d7d7';
+            placeholder.style.textAlign = 'center';
+
+            const msg = document.createElement('p');
+            msg.style.margin = '0';
+            msg.style.maxWidth = '420px';
+            msg.style.fontSize = '14px';
+            msg.textContent = 'YouTube embed is paused until cookie consent is accepted.';
+
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.gap = '10px';
+            actions.style.flexWrap = 'wrap';
+            actions.style.justifyContent = 'center';
+
+            const acceptBtn = document.createElement('button');
+            acceptBtn.type = 'button';
+            acceptBtn.textContent = 'Accept Cookies & Play';
+            acceptBtn.style.padding = '8px 14px';
+            acceptBtn.style.borderRadius = '6px';
+            acceptBtn.style.border = '1px solid #edb049';
+            acceptBtn.style.backgroundColor = '#edb049';
+            acceptBtn.style.color = '#141414';
+            acceptBtn.style.fontWeight = '600';
+            acceptBtn.style.cursor = 'pointer';
+
+            const externalLink = document.createElement('a');
+            externalLink.href = url;
+            externalLink.target = '_blank';
+            externalLink.rel = 'noopener noreferrer';
+            externalLink.textContent = 'Watch on YouTube';
+            externalLink.style.padding = '8px 14px';
+            externalLink.style.borderRadius = '6px';
+            externalLink.style.border = '1px solid rgba(255, 255, 255, 0.25)';
+            externalLink.style.backgroundColor = '#272727';
+            externalLink.style.color = '#d7d7d7';
+            externalLink.style.textDecoration = 'none';
+
+            acceptBtn.addEventListener('click', () => {
+                setCookieConsent('accepted');
+                mountIframe();
+            });
+
+            actions.appendChild(acceptBtn);
+            actions.appendChild(externalLink);
+            placeholder.appendChild(msg);
+            placeholder.appendChild(actions);
+            mediaElement.appendChild(placeholder);
+
+            window.addEventListener('portfolioCookieConsentChanged', (event) => {
+                if (event.detail && event.detail.consent === 'accepted') {
+                    mountIframe();
+                }
+            }, { once: true });
 
             return mediaElement;
         };

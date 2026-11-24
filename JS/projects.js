@@ -1,4 +1,80 @@
 (() => {
+    const COOKIE_CONSENT_KEY = 'portfolio_cookie_consent';
+
+    const hasCookieConsent = () => localStorage.getItem(COOKIE_CONSENT_KEY) === 'accepted';
+
+    const setCookieConsent = (value) => {
+        localStorage.setItem(COOKIE_CONSENT_KEY, value);
+        window.dispatchEvent(new CustomEvent('portfolioCookieConsentChanged', { detail: { consent: value } }));
+        const banner = document.getElementById('cookie-consent-banner');
+        if (banner) banner.remove();
+    };
+
+    const createCookieBanner = () => {
+        if (!document.body || localStorage.getItem(COOKIE_CONSENT_KEY) || document.getElementById('cookie-consent-banner')) {
+            return;
+        }
+
+        const banner = document.createElement('div');
+        banner.id = 'cookie-consent-banner';
+        banner.style.position = 'fixed';
+        banner.style.bottom = '16px';
+        banner.style.left = '16px';
+        banner.style.right = '16px';
+        banner.style.maxWidth = '560px';
+        banner.style.margin = '0 auto';
+        banner.style.padding = '16px 18px';
+        banner.style.backgroundColor = '#1e1e1e';
+        banner.style.color = '#d7d7d7';
+        banner.style.border = '1px solid rgba(255, 255, 255, 0.22)';
+        banner.style.borderRadius = '8px';
+        banner.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.55)';
+        banner.style.zIndex = '10000';
+        banner.style.fontSize = '13px';
+        banner.style.lineHeight = '1.45';
+
+        const text = document.createElement('p');
+        text.style.margin = '0 0 12px 0';
+        text.textContent = 'This portfolio uses third-party embeds (such as YouTube videos) that may set cookies when loaded. You can accept or reject external media cookies.';
+
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '10px';
+        actions.style.justifyContent = 'flex-end';
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.type = 'button';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.style.padding = '7px 14px';
+        rejectBtn.style.borderRadius = '6px';
+        rejectBtn.style.border = '1px solid rgba(255, 255, 255, 0.28)';
+        rejectBtn.style.backgroundColor = '#272727';
+        rejectBtn.style.color = '#d7d7d7';
+        rejectBtn.style.cursor = 'pointer';
+        rejectBtn.style.fontSize = '13px';
+
+        const acceptBtn = document.createElement('button');
+        acceptBtn.type = 'button';
+        acceptBtn.textContent = 'Accept';
+        acceptBtn.style.padding = '7px 14px';
+        acceptBtn.style.borderRadius = '6px';
+        acceptBtn.style.border = '1px solid #edb049';
+        acceptBtn.style.backgroundColor = '#edb049';
+        acceptBtn.style.color = '#141414';
+        acceptBtn.style.fontWeight = '600';
+        acceptBtn.style.cursor = 'pointer';
+        acceptBtn.style.fontSize = '13px';
+
+        rejectBtn.addEventListener('click', () => setCookieConsent('rejected'));
+        acceptBtn.addEventListener('click', () => setCookieConsent('accepted'));
+
+        actions.appendChild(rejectBtn);
+        actions.appendChild(acceptBtn);
+        banner.appendChild(text);
+        banner.appendChild(actions);
+        document.body.appendChild(banner);
+    };
+
     const getSiteRootUrl = () => {
         const pathname = window.location.pathname;
         const lower = pathname.toLowerCase();
@@ -280,6 +356,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
+        createCookieBanner();
         addHomeButtonUnderSoftware();
         setFixedArrowPositions();
 
@@ -592,13 +669,69 @@
                 videoId = '';
             }
 
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube.com/embed/${videoId}`;
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen = true;
-            iframe.title = 'YouTube video';
+            const mountIframe = () => {
+                mediaElement.innerHTML = '';
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}`;
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.title = 'YouTube video';
+                mediaElement.appendChild(iframe);
+            };
 
-            mediaElement.appendChild(iframe);
+            if (hasCookieConsent()) {
+                mountIframe();
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.style.width = '100%';
+                placeholder.style.height = '100%';
+                placeholder.style.minHeight = '320px';
+                placeholder.style.display = 'flex';
+                placeholder.style.flexDirection = 'column';
+                placeholder.style.alignItems = 'center';
+                placeholder.style.justifyContent = 'center';
+                placeholder.style.gap = '12px';
+                placeholder.style.padding = '24px';
+                placeholder.style.boxSizing = 'border-box';
+                placeholder.style.backgroundColor = '#181818';
+                placeholder.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+                placeholder.style.borderRadius = '8px';
+                placeholder.style.color = '#d7d7d7';
+                placeholder.style.textAlign = 'center';
+
+                const msg = document.createElement('p');
+                msg.style.margin = '0';
+                msg.style.maxWidth = '420px';
+                msg.style.fontSize = '14px';
+                msg.textContent = 'External YouTube embed is blocked until third-party cookies are accepted.';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.type = 'button';
+                loadBtn.textContent = 'Accept & Load Video';
+                loadBtn.style.padding = '8px 16px';
+                loadBtn.style.borderRadius = '6px';
+                loadBtn.style.border = '1px solid #edb049';
+                loadBtn.style.backgroundColor = '#edb049';
+                loadBtn.style.color = '#141414';
+                loadBtn.style.fontWeight = '600';
+                loadBtn.style.cursor = 'pointer';
+
+                loadBtn.addEventListener('click', () => {
+                    setCookieConsent('accepted');
+                    mountIframe();
+                });
+
+                placeholder.appendChild(msg);
+                placeholder.appendChild(loadBtn);
+                mediaElement.appendChild(placeholder);
+
+                window.addEventListener('portfolioCookieConsentChanged', (event) => {
+                    if (event.detail && event.detail.consent === 'accepted') {
+                        mountIframe();
+                    }
+                }, { once: true });
+            }
+
             return mediaElement;
         };
 
